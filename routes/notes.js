@@ -13,8 +13,8 @@ router.get('/', (req, res, next) => {
   if (searchTerm) {
     filter = {
       $or: [
-        { title: { $regex: searchTerm, options: 'i' } },
-        { content: { $regex: searchTerm, options: 'i' } }
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { content: { $regex: searchTerm, $options: 'i' } }
       ]
     };
   }
@@ -83,7 +83,7 @@ router.put('/:id', (req, res, next) => {
   Note.findByIdAndUpdate(id, updatedNote)
     .then(newNote => {
       if (newNote) {
-        res.json(newNote)
+        res.json(newNote);
       } else {
         next();
       }
@@ -100,7 +100,7 @@ router.delete('/:id', (req, res, next) => {
 
   Note.findByIdAndRemove(id)
     .then(() => res.sendStatus(204))
-    .catch(err => console.err(`ERROR: ${err.message}`))
+    .catch(err => console.err(`ERROR: ${err.message}`));
   
   
 });
