@@ -107,7 +107,6 @@ describe('Notes API tests', function() {
         Note.find(),
         chai.request(app).get('/api/notes')
       ]).then(([data, res]) => {
-        console.log(data,res);
         expect(res).have.status(200);
         expect(res).to.be.json;
         expect(res.body).to.be.a('array');
