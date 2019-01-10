@@ -114,4 +114,50 @@ describe('Notes API tests', function() {
       });
     });
   });
+
+  describe('PUT /api/notes/:id', function() {
+    it('should update a note at a given id with the given data', function() {
+      const updateNote = {
+        title: 'Update test',
+        content: 'Update Content'
+      };
+
+      return Note.findOne()
+        .then(note => {
+          updateNote.id = note.id;
+          return chai
+            .request(app)
+            .put(`/api/notes/${note.id}`)
+            .send(updateNote);
+        })
+        .then(res => {
+          expect(res).to.have.status(201);
+
+          return Note.findById(updateNote.id);
+        })
+        .then(note => {
+          expect(note.title).to.equal(updateNote.title);
+          expect(note.content).to.equal(updateNote.content);
+        });
+    });
+  });
+
+  describe('DELETE /api/notes/:id', function() {
+    it('should delete a note by a specific id', function() {
+      let note;
+
+      return Note.findOne()
+        .then(_note => {
+          note = _note;
+          return chai.request(app).delete(`/api/notes/${note.id}`);
+        })
+        .then(res => {
+          expect(res).to.have.status(204);
+          return Note.findById(note.id);
+        })
+        .then(_note => {
+          expect(_note).to.be.null;
+        });
+    });
+  });
 });

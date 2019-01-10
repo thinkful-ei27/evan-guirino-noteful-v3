@@ -83,6 +83,7 @@ router.put('/:id', (req, res, next) => {
   Note.findByIdAndUpdate(id, updatedNote)
     .then(newNote => {
       if (newNote) {
+        res.location(`${req.originalUrl}`).status(201).json(newNote);
         res.json(newNote);
       } else {
         next();
