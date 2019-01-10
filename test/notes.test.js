@@ -88,7 +88,8 @@ describe('Notes API tests', function() {
             'title',
             'content',
             'createdAt',
-            'updatedAt'
+            'updatedAt',
+            'folderId'
           );
 
           //compare db results

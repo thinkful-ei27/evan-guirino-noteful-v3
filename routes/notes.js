@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 
-const Note = require('../models/note')
+const Note = require('../models/note');
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
