@@ -1,43 +1,45 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 
 const Folder = require('../models/folder');
 
 router.get('/', (req, res, next) => {
-  let filter = {};
-  const { searchTerm } = req.query;
-  if (searchTerm) {
-    filter = {
-      name: { $regex: searchTerm, options: 'i' }
-    };
-  }
-
-  Folder.find(filter)
-    .sort({ updatedAt: 'desc' })
+  Folder.find()
+    .sort('name')
     .then(folders => res.json(folders))
-    .catch(err => console.err(`ERROR: ${err.message}`));
+    .catch(err => next(err));
 });
 
-
 router.get('/:id', (req, res, next) => {
-  const id  = req.params.id;
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
 
   Folder.findById(id)
-    .then(folder => res.json(folder))
+    .then(result => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
     .catch(err => {
-      console.err(`ERROR: ${err.message}`);
-      return next(err);
+      next(err);
     });
 });
 
 router.post('/', (req, res, next) => {
- 
   const { name } = req.body;
- 
+
   const newFolder = { name };
 
-  if (!newFolder.name) {
-    const err = new Error('Missing `name` in request bod')
+  if (!name) {
+    const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
   }
@@ -45,14 +47,17 @@ router.post('/', (req, res, next) => {
   Folder.create(newFolder)
     .then(newFolder => {
       if (newFolder) {
-        res.location(req.originalUrl).status(201).json(newFolder);
+        res
+          .location(`${req.originalUrl}/${newFolder.id}`)
+          .status(201)
+          .json(newFolder);
       } else {
         next();
       }
     })
     .catch(err => {
-      if (err.code === 1100) {
-        err = new Error(`Name already exists ${err.message}`);
+      if (err.code === 11000) {
+        err = new Error('Folder name already exists');
         err.status = 400;
       }
       next(err);
@@ -60,21 +65,31 @@ router.post('/', (req, res, next) => {
 });
 
 router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const { id } = req.params;
+  const { name } = req.body;
   const updateFolder = { name };
 
-  if (!updateFolder.name) {
-    const err = new Error('No `name` in request body')
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
     err.status = 400;
     return next(err);
   }
 
 
-  Folder.findByIdAndUpdate(id)
-    .then(folder => {
+  if (!name) {
+    const err = new Error('No `name` in request body');
+    err.status = 400;
+    return next(err);
+  }
 
+  Folder.findByIdAndUpdate(id, updateFolder, { new: true })
+    .then(folder => {
       if (folder) {
-        res.location(req.originalUrl).status(201).json(folder);
+        res
+          .location(`${req.originalUrl}/${folder.id}`)
+          .status(201)
+          .json(folder);
       } else {
         next();
       }
@@ -88,11 +103,11 @@ router.put('/:id', (req, res, next) => {
     });
 });
 
-router.get('/:id', (req, res, next) => {
+router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
 
-  Folder.findOneAndRemove(id)
-    .then(() => res.status(204))
+  Folder.findByIdAndRemove(id)
+    .then(() => res.sendStatus(204))
     .catch(err => console.err(`ERROR: ${err.message}`));
 });
 

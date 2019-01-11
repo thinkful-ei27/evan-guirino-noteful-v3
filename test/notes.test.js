@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 
 const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
-const Note = require('../models/note');
-const { notes } = require('../db/data');
+const Note = require('../models/note').default;
+const { notes, folders } = require('../db/data');
 const expect = chai.expect;
 chai.use(chaiHttp);
 
@@ -20,7 +20,7 @@ describe('Notes API tests', function() {
 
   beforeEach(function() {
     console.log('seeding data');
-    return Note.insertMany(notes);
+    return Note.insertMany(notes, folders);
   });
 
   afterEach(function() {
@@ -38,7 +38,8 @@ describe('Notes API tests', function() {
       const newItem = {
         title: 'The best article about cats ever!',
         content:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
+        
       };
 
       let res;
@@ -57,7 +58,7 @@ describe('Notes API tests', function() {
             'title',
             'content',
             'createdAt',
-            'updatedAt'
+            'updatedAt' 
           );
           return Note.findById(res.body.id);
         })
@@ -132,7 +133,7 @@ describe('Notes API tests', function() {
             .send(updateNote);
         })
         .then(res => {
-          expect(res).to.have.status(201);
+          expect(res).to.have.status(200);
 
           return Note.findById(updateNote.id);
         })

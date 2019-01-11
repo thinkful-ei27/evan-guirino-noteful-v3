@@ -8,9 +8,9 @@ folderSchema.set('timestamps', true);
 
 folderSchema.set('toJSON', {
   virtuals: true,
-  transform: (doc, ret) => {
-    delete ret._id;
-    delete ret.__v;
+  transform: (doc, result) => {
+    delete result._id;
+    delete result.__v;
   }
 });
 
