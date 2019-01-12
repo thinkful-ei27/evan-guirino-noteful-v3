@@ -108,7 +108,7 @@ router.delete('/:id', (req, res, next) => {
 
   Folder.findByIdAndRemove(id)
     .then(() => res.sendStatus(204))
-    .catch(err => console.err(`ERROR: ${err.message}`));
+    .catch(err => next(err));
 });
 
 module.exports = router;

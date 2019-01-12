@@ -5,10 +5,15 @@ const mongoose = require('mongoose');
 
 const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
-const Note = require('../models/note').default;
-const { notes, folders } = require('../db/data');
+const { notes, folders, tags } = require('../db/data');
 const expect = chai.expect;
 chai.use(chaiHttp);
+
+
+const Note = require('../models/note');
+const Folder = require('../models/folder');
+const Tag = require('../models/tag');
+
 
 describe('Notes API tests', function() {
   before(function() {
@@ -20,7 +25,15 @@ describe('Notes API tests', function() {
 
   beforeEach(function() {
     console.log('seeding data');
-    return Note.insertMany(notes, folders);
+    return Promise.all([
+      Note.insertMany(notes),
+
+      Folder.insertMany(folders),
+      Folder.createIndexes(),
+      
+      Tag.insertMany(tags),
+      Tag.createIndexes()
+    ]);
   });
 
   afterEach(function() {
@@ -58,7 +71,8 @@ describe('Notes API tests', function() {
             'title',
             'content',
             'createdAt',
-            'updatedAt' 
+            'updatedAt',
+            'tags'
           );
           return Note.findById(res.body.id);
         })
@@ -90,7 +104,8 @@ describe('Notes API tests', function() {
             'content',
             'createdAt',
             'updatedAt',
-            'folderId'
+            'folderId',
+            'tags'
           );
 
           //compare db results

@@ -72,7 +72,7 @@ router.put('/:id', (req, res, next) => {
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('Tag id is not valid');
-    err.status = 400
+    err.status = 400;
     next(err);
   }
 
@@ -105,5 +105,5 @@ router.delete('/:id', (req, res, next) => {
   Tag.findByIdAndRemove(id)
     .then(() => res.sendStatus(204).end())
     .catch(err => next(err));
-})
+});
 module.exports = router;
