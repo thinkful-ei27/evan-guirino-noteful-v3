@@ -7,7 +7,8 @@ const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm, folderId, tags } = req.query;
+
+  const { searchTerm, folderId, tagId } = req.query;
 
   let filter = {};
 
@@ -19,13 +20,12 @@ router.get('/', (req, res, next) => {
       ]
     };
   }
-
   if (folderId) {
     filter.folderId = folderId;
   }
 
-  if (tags) {
-    filter.tags = tags;
+  if (tagId) {
+    filter.tags = tagId;
   }
 
   Note.find(filter)
@@ -37,13 +37,15 @@ router.get('/', (req, res, next) => {
     .catch(err => {
       next(err);
     });
+
 });
 
+/* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
+
   const { id } = req.params;
 
-  
-
+  /***** Never trust users - validate input *****/
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The `id` is not valid');
     err.status = 400;
@@ -62,11 +64,13 @@ router.get('/:id', (req, res, next) => {
     .catch(err => {
       next(err);
     });
+
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content, folderId, tags } = req.body;
+
+  const { title, content, folderId, tags = [] } = req.body;
 
   /***** Never trust users - validate input *****/
   if (!title) {
@@ -81,44 +85,38 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
-  if (tags) {
-    tags.forEach(tag => {
-      if (!mongoose.Types.ObjectId.isValid(tag)) {
-        const err = new Error('Tag id is not valid');
-        err.status = 400;
-        return next(err);
-      }
-    });
-  }
-  
+  tags.forEach((tag) => {
+    if (!mongoose.Types.ObjectId.isValid(tag)) {
+      const err = new Error('The `id` is not valid');
+      err.status = 400;
+      return next(err);
+    }
+  });
 
   const newNote = { title, content, folderId, tags };
+  if (newNote.folderId === '') {
+    delete newNote.folderId;
+  }
 
   Note.create(newNote)
-    
     .then(result => {
-      res
-        .location(`${req.originalUrl}/${result.id}`)
-        .status(201)
-        .json(result);
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
     })
     .catch(err => {
       next(err);
     });
+
 });
 
+/* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-  const { id } = req.params;
-  const { title, content, folderId, tags } = req.body;
 
+  const { id } = req.params;
+  const { title, content, folderId, tags = [] } = req.body;
+
+  /***** Never trust users - validate input *****/
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The `id` is not valid');
-    err.status = 400;
-    return next(err);
-  }
-
-  if (!title) {
-    const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
@@ -130,16 +128,20 @@ router.put('/:id', (req, res, next) => {
   }
 
   if (tags) {
-    tags.forEach(tag => {
-      if (!mongoose.Types.ObjectId.isValid(tag)) {
-        const err = new Error('Tag id is not valid');
-        err.status = 400;
-        return next(err);
-      }
-    });
+    const badIds = tags.filter((tag) => !mongoose.Types.ObjectId.isValid(tag));
+    if (badIds.length) {
+      const err = new Error('The `tags` array contains an invalid `id`');
+      err.status = 400;
+      return next(err);
+    }
   }
 
-  const updateNote = { title, content, folderId, $push: { tags } };
+  const updateNote = { title, content, folderId, tags };
+
+  if (folderId === '') {
+    delete updateNote.folderId;
+    updateNote.$unset = { folderId: '' };
+  }
 
   Note.findByIdAndUpdate(id, updateNote, { new: true })
     .then(result => {
@@ -152,11 +154,15 @@ router.put('/:id', (req, res, next) => {
     .catch(err => {
       next(err);
     });
+
 });
 
+/* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
+
   const { id } = req.params;
 
+  /***** Never trust users - validate input *****/
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The `id` is not valid');
     err.status = 400;
@@ -165,11 +171,12 @@ router.delete('/:id', (req, res, next) => {
 
   Note.findByIdAndRemove(id)
     .then(() => {
-      res.status(204).end();
+      res.sendStatus(204);
     })
     .catch(err => {
       next(err);
     });
+
 });
 
 module.exports = router;

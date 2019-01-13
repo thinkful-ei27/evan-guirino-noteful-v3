@@ -43,12 +43,10 @@ router.post('/', (req, res, next) => {
   }
   Tag.create(newTag)
     .then(newTag => {
-      if (newTag) {
-        res
-          .location(`${req.originalUrl}/${newTag.id}`)
-          .status(201)
-          .json(newTag);
-      }
+      res
+        .location(`${req.originalUrl}/${newTag.id}`)
+        .status(201)
+        .json(newTag);
     })
     .catch(err => {
       if (err.code === 11000) {
@@ -60,7 +58,7 @@ router.post('/', (req, res, next) => {
 });
 
 router.put('/:id', (req, res, next) => {
-  const id  = req.params.id;
+  const id = req.params.id;
   const { name } = req.body;
   const updateTag = { name };
 
@@ -76,7 +74,7 @@ router.put('/:id', (req, res, next) => {
     next(err);
   }
 
-  Tag.findByIdAndUpdate(id, updateTag, {new: true})
+  Tag.findByIdAndUpdate(id, updateTag, { new: true })
     .then(updatedTag => {
       if (updatedTag) {
         res.json(updatedTag);

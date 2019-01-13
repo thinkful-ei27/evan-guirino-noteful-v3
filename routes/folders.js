@@ -86,17 +86,14 @@ router.put('/:id', (req, res, next) => {
   Folder.findByIdAndUpdate(id, updateFolder, { new: true })
     .then(folder => {
       if (folder) {
-        res
-          .location(`${req.originalUrl}/${folder.id}`)
-          .status(201)
-          .json(folder);
+        res.json(folder);
       } else {
         next();
       }
     })
     .catch(err => {
-      if (err.code === 1100) {
-        err = new Error(`Name already exists ${err.message}`);
+      if (err.code === 11000) {
+        err = new Error('Folder name already exists');
         err.status = 400;
       }
       next(err);
